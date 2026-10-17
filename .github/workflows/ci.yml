@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+      - name: actionlint
+        run: |
+          set -euo pipefail
+          v=1.7.7
+          base="https://github.com/rhysd/actionlint/releases/download/v${v}"
+          curl -fsSL -o "actionlint.tgz" "${base}/actionlint_${v}_linux_amd64.tar.gz"
+          curl -fsSL -o "checksums.txt" "${base}/actionlint_${v}_checksums.txt"
+          grep " actionlint_${v}_linux_amd64.tar.gz\$" checksums.txt | sed 's/ actionlint_.*/ actionlint.tgz/' | sha256sum -c -
+          tar -xzf actionlint.tgz actionlint
+          ./actionlint
+
+  test:
+    name: Tests (Python ${{ matrix.python }}, MCP SDK ${{ matrix.mcp || 'none' }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { python: "3.11", mcp: "2.2.0" }
+          - { python: "3.12", mcp: "2.2.0" }
+          - { python: "3.13", mcp: "2.2.0" }
+          - { python: "3.12", mcp: "1.30.0" }
+          # Without the SDK the SDK tests are skipped and everything else must still pass.
+          - { python: "3.12", mcp: "" }
+    env:
+      MCP: ${{ matrix.mcp }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e '.[dev]'
+      - name: Install the MCP SDK that acts as the independent client
+        if: matrix.mcp != ''
+        run: pip install "mcp==${MCP}"
+      - run: python -m pytest -q -rs
+      - name: The SDK tests really ran (a skip would hide a broken client)
+        if: matrix.mcp != ''
+        run: |
+          set -euo pipefail
+          python -m pytest tests/test_sdk_client.py -q | tee "$RUNNER_TEMP/sdk.txt"
+          if grep -qi skipped "$RUNNER_TEMP/sdk.txt"; then echo "::error::SDK tests were skipped"; exit 1; fi
+          python -c "import importlib.metadata as m, os; assert m.version('mcp') == os.environ['MCP'], m.version('mcp')"
+
+  machine:
+    name: The real machine and real systemd (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-22.04, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e '.[dev]'
+      - name: What this machine is
+        run: |
+          set -x
+          systemctl --version | head -1
+          ps -p 1 -o comm=
+          id
+          sudo -n true && echo "passwordless sudo"
+          getconf PAGESIZE
+      - name: The tools agree with free, df, ss, ps, ip and uname
+        run: python -m pytest tests/test_live.py -v -rs
+      - name: The systemd tools agree with systemctl, and none of those tests may be skipped
+        run: |
+          set -euo pipefail
+          python -m pytest tests/test_systemd_live.py -v -rs | tee "$RUNNER_TEMP/systemd.txt"
+          if grep -E "SKIPPED|skipped" "$RUNNER_TEMP/systemd.txt"; then echo "::error::systemd tests were skipped"; exit 1; fi
+      - name: The unit tests, as an ordinary user and again as root
+        run: |
+          python -m pytest -q tests --deselect tests/test_systemd_live.py
+          sudo -E env "PATH=$PATH" python -m pytest -q tests --deselect tests/test_systemd_live.py -p no:cacheprovider
+
+  wheel:
+    name: The installed command works
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build a wheel and install it into a clean environment, the way a user would
+        run: |
+          set -euo pipefail
+          pip install build
+          python -m build
+          python -m venv "$RUNNER_TEMP/clean"
+          "$RUNNER_TEMP/clean/bin/pip" install dist/*.whl mcp
+          unzip -l dist/*.whl
+          if unzip -l dist/*.whl | grep -q "tests/"; then echo "::error::the wheel contains tests"; exit 1; fi
+      - name: The command starts, lists its tools and answers a hand-typed session
+        working-directory: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          export PATH="$RUNNER_TEMP/clean/bin:$PATH"
+          linux-diag-mcp --version
+          linux-diag-mcp --list-tools | python -c "import json, sys; names = [t['name'] for t in json.load(sys.stdin)]; assert len(names) == 10, names; print(names)"
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' '{"jsonrpc":"2.0","method":"notifications/initialized"}' '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"system_overview","arguments":{}}}' | linux-diag-mcp | tee out.jsonl
+          test "$(wc -l < out.jsonl)" -eq 2
+          grep -q '"hostname"' out.jsonl
+      - name: The installed command works with the official SDK client from another directory
+        working-directory: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/clean/bin/python" - <<'PY'
+          import asyncio, shutil
+          from mcp import ClientSession, StdioServerParameters
+          from mcp.client.stdio import stdio_client
+
+          async def main():
+              params = StdioServerParameters(command=shutil.which("linux-diag-mcp"), args=["--allow-dir", "/var/log"])
+              async with stdio_client(params) as (r, w), ClientSession(r, w) as s:
+                  await s.initialize()
+                  tools = (await s.list_tools()).tools
+                  assert len(tools) == 10, tools
+                  res = await s.call_tool("system_overview", {})
+                  assert not (getattr(res, "is_error", None) or getattr(res, "isError", False)), res
+                  bad = await s.call_tool("read_log", {"path": "/etc/shadow"})
+                  assert getattr(bad, "is_error", None) or getattr(bad, "isError", False), bad
+                  print("ok:", len(tools), "tools")
+
+          asyncio.run(main())
+          PY
+      - name: The committed example session is what the code writes today
+        run: python examples/make_transcript.py --check

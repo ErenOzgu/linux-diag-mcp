@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="t d">
+  <title id="t">linux-diag-mcp</title>
+  <desc id="d">A read-only MCP server for Linux diagnostics over stdio.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#1b2230"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="420" fill="url(#bg)"/>
+  <rect width="1280" height="420" fill="url(#grid)"/>
+  <rect width="640" height="420" fill="url(#glow)"/>
+  <g transform="translate(0 0)">
+  <g font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+    <text x="64" y="128" font-size="13" letter-spacing="3" fill="#34d399" font-weight="600">MCP  ·  LINUX  ·  READ-ONLY</text>
+    <text x="62" y="196" font-size="58" font-weight="700" fill="#f0f6fc">linux-diag-mcp</text>
+    <text x="64" y="244" font-size="22" fill="#9aa7b8">Ten read-only questions an AI assistant can</text>
+    <text x="64" y="274" font-size="22" fill="#9aa7b8">ask a Linux machine. No shell, no writes.</text>
+    <g font-size="14" font-weight="600" fill="#d0d7de">
+      <rect x="64" y="304" width="101" height="34" rx="17" fill="#ffffff" fill-opacity="0.07" stroke="#ffffff" stroke-opacity="0.14"/><text x="114" y="326" text-anchor="middle">10 tools</text>
+      <rect x="177" y="304" width="109" height="34" rx="17" fill="#ffffff" fill-opacity="0.07" stroke="#ffffff" stroke-opacity="0.14"/><text x="231" y="326" text-anchor="middle">read-only</text>
+      <rect x="298" y="304" width="126" height="34" rx="17" fill="#ffffff" fill-opacity="0.07" stroke="#ffffff" stroke-opacity="0.14"/><text x="361" y="326" text-anchor="middle">stdlib only</text>
+    </g>
+  </g>
+  <g transform="translate(700 56)">
+    <rect width="516" height="308" rx="12" fill="#0b0f14" stroke="#ffffff" stroke-opacity="0.12"/>
+    <rect width="516" height="38" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+    <circle cx="22" cy="19" r="6" fill="#f85149" fill-opacity="0.85"/>
+    <circle cx="42" cy="19" r="6" fill="#d29922" fill-opacity="0.85"/>
+    <circle cx="62" cy="19" r="6" fill="#3fb950" fill-opacity="0.85"/>
+    <text x="258" y="24" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12" fill="#8b949e">session</text>
+    <g font-family="SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="13" fill="#8b949e">
+      <text x="22" y="76" xml:space="preserve"><tspan fill="#8b949e">→ </tspan><tspan fill="#e6edf3">service_status api</tspan></text>
+      <text x="22" y="102" xml:space="preserve"><tspan fill="#8b949e">   activating, </tspan><tspan fill="#ff7b72">14 restarts</tspan></text>
+      <text x="22" y="128" xml:space="preserve"><tspan fill="#8b949e">→ </tspan><tspan fill="#e6edf3">journal_tail api</tspan></text>
+      <text x="22" y="154" xml:space="preserve"><tspan fill="#8b949e">   DATABASE_URL=</tspan><tspan fill="#3fb950">&lt;credentials&gt;</tspan></text>
+      <text x="22" y="180" xml:space="preserve"><tspan fill="#8b949e">→ </tspan><tspan fill="#e6edf3">read_log /etc/shadow</tspan></text>
+      <text x="22" y="206" xml:space="preserve"><tspan fill="#8b949e">   </tspan><tspan fill="#ff7b72">outside allowed dirs</tspan></text>
+      <text x="22" y="232" xml:space="preserve"><tspan fill="#8b949e">→ </tspan><tspan fill="#e6edf3">restart_service</tspan></text>
+      <text x="22" y="258" xml:space="preserve"><tspan fill="#8b949e">   </tspan><tspan fill="#ff7b72">unknown tool</tspan></text>
+    </g>
+  </g>
+  </g>
+</svg>
