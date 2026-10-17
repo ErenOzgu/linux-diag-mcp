@@ -135,7 +135,8 @@ class TestTransientUnits:
         if run("journalctl", "--no-pager", "-n", "1", "--unit", name + ".service").returncode != 0:
             pytest.skip("this user may not read the journal")
         got = call("journal_tail", unit=name, lines=50)
-        mine = [x for x in got["lines"] if marker in x]
+        # systemd also logs the command line of the unit it started, which contains the marker: count the shell's lines
+        mine = [x for x in got["lines"] if marker in x and " sh[" in x]
         if not mine:
             pytest.skip("this user sees no lines of system units in the journal")
         assert len(mine) == 3, got
@@ -143,12 +144,12 @@ class TestTransientUnits:
         assert any("password=<secret>" in x for x in mine)
         assert got["redacted_lines"] >= 1
         assert all(len(x) < 2000 for x in mine)
-        assert any(x.startswith("20") for x in mine)  # --output=short-iso starts with the year
+        assert all(x.startswith("20") for x in got["lines"])  # --output=short-iso starts with the year
 
     def test_the_priority_filter_keeps_the_error_and_drops_the_info(self, talking_unit):
         name, marker = talking_unit
         got = call("journal_tail", unit=name, priority="err", lines=50)
-        lines = [x for x in got["lines"] if marker in x]
+        lines = [x for x in got["lines"] if marker in x and " sh[" in x]
         if not lines:
             pytest.skip("this user sees no lines of system units in the journal")
         assert len(lines) == 1 and "error line" in lines[0]

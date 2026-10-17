@@ -132,7 +132,8 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           set -euo pipefail
-          "$RUNNER_TEMP/clean/bin/python" - <<'PY'
+          export PATH="$RUNNER_TEMP/clean/bin:$PATH"
+          python - <<'PY'
           import asyncio, shutil
           from mcp import ClientSession, StdioServerParameters
           from mcp.client.stdio import stdio_client
