@@ -215,7 +215,7 @@ the tools feature) with no SDK, so the tests are built to catch a misreading the
 | The wire | A real subprocess over pipes: stdout is protocol only even when a tool crashes, garbage lines and a 2 MB line do not end the session, 200 pipelined requests come back in order |
 | An independent client | The official MCP Python SDK drives the server over a real stdio pipe (`tests/test_sdk_client.py`): handshake, `tools/list`, every tool called and its result validated against its output schema, and the hostile calls above. CI runs it with SDK 1.30 and with 2.x |
 | The real machine | `tests/test_live.py` compares the tools with `free`, `df`, `ss`, `ps`, `ip`, `uname` and `uptime -s` on the machine running the tests, including a busy child process and a listener opened by the test |
-| Real systemd | `tests/test_systemd_live.py` runs on the CI runner, which has systemd: it starts a failing and a talking transient unit with `systemd-run` and compares `service_status`, `failed_units` and `journal_tail` with `systemctl` |
+| Real systemd | `tests/test_systemd_live.py` runs on the CI runners, which have systemd: it starts a failing and a talking transient unit with `systemd-run` and compares `service_status`, `failed_units` and `journal_tail` with `systemctl` |
 | The README | The tools table is generated from the code and compared, every option is documented, the configuration snippets parse with the real argument parser, and the hand-typed session above is run |
 | The example | `examples/transcript.md` is regenerated in CI and must not differ |
 
@@ -229,7 +229,7 @@ explicitly, and `is_file(follow_symlinks=False)` would skip them anyway.
 What the tests do not cover, and what the example is not:
 
 * The server has been driven by the official SDK's client, **not by Claude Desktop or Claude Code themselves**. The protocol is standard, so it should work; nobody has run it there.
-* The real-systemd tests run on one distribution (the Ubuntu runner). Other systemd versions and other distributions are untested.
+* The real-systemd tests run on the GitHub-hosted Ubuntu 22.04 and 24.04 runners (x86_64) and Ubuntu 24.04 on arm64. Other distributions are untested.
 * The machine in the example is invented, and so is every fixture: no real logs, hosts or credentials are in this repository.
 
 ## What it cannot do
