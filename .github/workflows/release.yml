@@ -19,7 +19,7 @@ permissions:
 jobs:
   release:
     name: Package and GitHub release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check version format
         run: |
