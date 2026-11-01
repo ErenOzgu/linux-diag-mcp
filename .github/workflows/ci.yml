@@ -17,11 +17,11 @@ jobs:
     name: Lint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-      - run: pip install ruff
+      - run: pip install ruff==0.17.3
       - run: ruff check .
       - run: ruff format --check .
       - name: actionlint
@@ -51,8 +51,8 @@ jobs:
     env:
       MCP: ${{ matrix.mcp }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
       - run: pip install -e '.[dev]'
@@ -76,8 +76,8 @@ jobs:
       matrix:
         os: [ubuntu-24.04, ubuntu-22.04, ubuntu-24.04-arm]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - run: pip install -e '.[dev]'
@@ -105,14 +105,14 @@ jobs:
     name: The installed command works
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - name: Build a wheel and install it into a clean environment, the way a user would
         run: |
           set -euo pipefail
-          pip install build
+          pip install build==1.6.1
           python -m build
           python -m venv "$RUNNER_TEMP/clean"
           "$RUNNER_TEMP/clean/bin/pip" install dist/*.whl mcp
