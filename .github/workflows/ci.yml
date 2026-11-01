@@ -115,7 +115,7 @@ jobs:
           pip install build==1.6.1
           python -m build
           python -m venv "$RUNNER_TEMP/clean"
-          "$RUNNER_TEMP/clean/bin/pip" install dist/*.whl mcp
+          "$RUNNER_TEMP/clean/bin/pip" install dist/*.whl mcp==2.2.0
           unzip -l dist/*.whl
           if unzip -l dist/*.whl | grep -q "tests/"; then echo "::error::the wheel contains tests"; exit 1; fi
       - name: The command starts, lists its tools and answers a hand-typed session
